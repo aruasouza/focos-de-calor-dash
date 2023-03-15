@@ -3,7 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import requests
-from datetime import datetime
+from datetime import datetime,timedelta
 import io
 from base64 import b64encode
 from dash.dependencies import Output, Input, State
@@ -23,8 +23,12 @@ def get_data():
         df = pd.json_normalize(req.json())
         df = df.rename(columns={'properties.longitude':'Longitude','properties.latitude':'Latitude','properties.pais':'País',
         'properties.estado':'Estado','properties.municipio':'Município','properties.risco_fogo':'Risco de Fogo',
-        'properties.precipitacao':'Precipitação','properties.numero_dias_sem_chuva':'Dias sem Chuva','properties.data_hora_gmt':'Data',
+        'properties.precipitacao':'Precipitação','properties.numero_dias_sem_chuva':'Dias sem Chuva','properties.data_hora_gmt':'Datetime',
         'geometry.type':'geometry_type','geometry.coordinates':'geometry_coordinates','properties.satelite':'Satélite'})
+        df['Datetime'] = pd.to_datetime(df['Datetime'])
+        df['Datetime'] = df['Datetime'].dt.tz_convert('America/Sao_Paulo')
+        df['Data'] = df['Datetime'].apply(datetime_to_data)
+        df['Hora'] = df['Datetime'].apply(datetime_to_hora)
         df.to_csv('dados_backup.csv',index = False,sep = ';',decimal = ',')
         time_df = pd.DataFrame({'time':[datetime.now()]})
         time_df.to_csv('time.csv',index = False)
@@ -37,6 +41,23 @@ def get_data():
         # time = pd.read_csv('time.csv').loc[0,'time']
     return df
 
+def datetime_to_data(date):
+    ano = str(date.year)
+    mes = str(date.month)
+    mes = mes if len(mes) == 2 else '0' + mes
+    dia = str(date.day)
+    dia = dia if len(dia) == 2 else '0' + dia
+    return dia + '/' + mes + '/' + ano
+
+def datetime_to_hora(date):
+    hora = str(date.hour)
+    hora = hora if len(hora) == 2 else '0' + hora
+    minuto = str(date.minute)
+    minuto = minuto if len(minuto) == 2 else '0' + minuto
+    sec = str(date.second)
+    sec = sec if len(sec) == 2 else '0' + sec
+    return hora + ':' + minuto + ':' + sec
+
 def inicial_figure():
     fig = px.density_mapbox(pd.DataFrame({'Município':[],'Latitude':[],'Longitude':[],'País':[],'Estado':[]}),
                             lat="Latitude", lon="Longitude",radius = 4, hover_name="Município",
@@ -48,7 +69,7 @@ def inicial_figure():
 def update_figure(data):
     df = pd.read_json(data, orient='split')
     fig = px.density_mapbox(df, lat="Latitude", lon="Longitude",radius = 4, hover_name="Município",
-        hover_data=["País",'Estado'], zoom=3,color_continuous_scale = 'Hot')
+        hover_data=["País",'Estado','Data','Hora'], zoom=3,color_continuous_scale = 'Hot')
 
     fig.update_layout(mapbox_style=map_style,transition_duration=500,margin=dict(l=0,r=0,b=0,t=0))
     fig.update(layout_coloraxis_showscale=False)
@@ -101,12 +122,13 @@ app.layout = html.Div([
     html.Div([
         html.Button('X',id = 'closeInfo',n_clicks = 0),
         html.Div([
-            html.H2('Sobre o projeto:'),
-            html.P('Dados das últimas 24h.'),
+            html.H2('Sobre o projeto'),
+            html.P('Dados de satélite das últimas 24h.'),
             html.P(['Fonte dos dados: ',html.A('BDQueimadas',href = 'https://queimadas.dgi.inpe.br/queimadas/portal')]),
-            html.P(['Criado por: ',html.A('Aruã Viggiano Souza',href = 'https://www.linkedin.com/in/aru%C3%A3-viggiano-souza/')])
+            html.P(['Criado por: ',html.A('Aruã Viggiano Souza',href = 'https://www.linkedin.com/in/aru%C3%A3-viggiano-souza/')]),
+            html.P(['Código fonte: ',html.A('Github',href = 'https://github.com/aruasouza/focos-de-calor-dash')])
         ],id = 'blocoTexto')],id = 'info')
 ])
 
 if __name__ == '__main__':
-    app.run_server(debug=True,port = 80)#,host = '0.0.0.0')
+    app.run_server(debug=False,port = 80,host = '0.0.0.0')
