@@ -1,0 +1,51 @@
+button.menuButton {
+    color:rgb(100,100,100);
+    margin:10px;
+    font-size:15px;
+    font-family:helvetica;
+    padding:7px;
+    margin-top:75px;
+    float:left;
+    background-color:white;
+    border:0px;
+    border-radius:15px;
+}
+button.menuButton:hover {
+    background-color: #505050;
+    color: white;
+}
+#info {
+    width:70vw;
+    height:50vh;
+    background-color: white;
+    position: fixed;
+    top: 25vh;
+    left:15vw;
+    z-index: 1;
+}
+button#closeInfo {
+    color:rgb(100,100,100);
+    font-size:15px;
+    font-family:helvetica;
+    float:right;
+    background-color:white;
+    border:0px;
+    width:25px;
+    height: 25px;
+}
+button#closeInfo:hover {
+    background-color: #505050;
+    color: white;
+}
+div#fade {
+    background-color: rgba(0,0,0,0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+}
+div#blocoTexto {
+    margin: 20px;
+    font-family:helvetica;
+}

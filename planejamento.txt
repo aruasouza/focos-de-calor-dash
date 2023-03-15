@@ -1,0 +1,6 @@
+Site com mapa full screen como google maps
+Botão para download do mapa
+botão para download dos dados em csv
+Botão que faz abrir uma janela com informações sobre o Site
+Swich que alterna entre modo escuro e modo normal
+Tela de dashboard com estatísticas dos focos de calor e botão que leva á ela
