@@ -4,7 +4,6 @@ button.menuButton {
     font-size:15px;
     font-family:helvetica;
     padding:7px;
-    margin-top:75px;
     float:left;
     background-color:white;
     border:0px;
@@ -23,7 +22,17 @@ button.menuButton:hover {
     transform: translate(-50%, -50%);
     z-index: 1;
 }
-button#closeInfo {
+#dashboard {
+    background-color: white;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 99%;
+    height: 99%;
+    z-index: 1;
+}
+button.close {
     color:rgb(100,100,100);
     font-size:15px;
     font-family:helvetica;
@@ -33,11 +42,11 @@ button#closeInfo {
     width:25px;
     height: 25px;
 }
-button#closeInfo:hover {
+button.close:hover {
     background-color: #505050;
     color: white;
 }
-div#fade {
+div.fade {
     background-color: rgba(0,0,0,0.5);
     position: fixed;
     top: 0;
@@ -45,7 +54,11 @@ div#fade {
     height: 100vh;
     width: 100vw;
 }
-div#blocoTexto {
+div.blocoTexto {
+    margin: 20px;
+    font-family:helvetica;
+}
+div.blocoDash {
     margin: 20px;
     font-family:helvetica;
 }
