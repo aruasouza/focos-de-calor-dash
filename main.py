@@ -1,9 +1,10 @@
 from dash import Dash, html, dcc
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 import requests
-from datetime import datetime,timedelta
+from datetime import datetime
 import io
 from base64 import b64encode
 from dash.dependencies import Output, Input, State
@@ -108,16 +109,30 @@ def show_dash(open,close):
         return {'display':'block'},{'display':'block'},True
     return {'display': 'none'},{'display': 'none'},False
 
-@app.callback(Output('byCountry','figure'),Output('bySatelite','figure'),Input('data','data'))
+@app.callback(Output('bargraph','figure'),Input('data','data'))
 def build_graphs(data):
     df = pd.read_json(data, orient='split')
+    fig = make_subplots(rows=2, cols=2,subplot_titles=("Focos por País", "Focos por Satélite","Focos por Hora"),specs=[[{}, {}],[{"colspan": 2}, None]])
     df['Focos'] = 1
     group1 = df[['País','Focos']].groupby('País').count().sort_values('Focos',ascending=False)
-    print(group1)
-    fig1 = go.Figure(go.Bar(x = group1.index,y = group1['Focos']))
+    if len(group1) > 6:
+        group1 = pd.concat([group1.iloc[:5],pd.DataFrame({'Focos':[group1.iloc[5:]['Focos'].sum()]},index = ['Outros'])])
+    fig.add_trace(go.Bar(x = group1.index,y = group1['Focos'],text=group1['Focos'],textposition='auto'),row = 1,col = 1)
     group2 = df[['Satélite','Focos']].groupby('Satélite').count().sort_values('Focos',ascending=False)
-    fig2 = go.Figure(go.Bar(x = group2.index,y = group2['Focos']))
-    return fig1,fig2
+    if len(group2) > 6:
+        group2 = pd.concat([group2.iloc[:5],pd.DataFrame({'Focos':[group2.iloc[5:]['Focos'].sum()]},index = ['Outros'])])
+    fig.add_trace(go.Bar(x = group2.index,y = group2['Focos'],text=group2['Focos'],textposition='auto'),row = 1,col = 2)
+    df['Datetime'] = pd.to_datetime(df['Datetime'])
+    df['hora_do_dia'] = df['Datetime'].dt.hour
+    df['dia'] = df['Datetime'].dt.day
+    df['mes'] = df['Datetime'].dt.month
+    df['ano'] = df['Datetime'].dt.year
+    df['new_datetime'] = df.apply(lambda x: datetime(x['ano'],x['mes'],x['dia'],x['hora_do_dia']),axis = 1)
+    group3 = df[['new_datetime','Focos']].groupby('new_datetime').count()
+    fig.add_trace(go.Scatter(x = group3.index,y = group3['Focos']),row = 2,col = 1)
+    fig.update_layout(showlegend=False,margin=dict(l=0, r=0, t=30, b=0),height = 610)
+    fig.update_yaxes(showticklabels=False)
+    return fig
 
 app.layout = html.Div([
     dcc.Store(id = 'data'),
@@ -150,9 +165,8 @@ app.layout = html.Div([
         html.Button('X',id = 'closeDash',n_clicks = 0,className = 'close'),
         html.Div([
             html.H2('Dashboard'),
-            dcc.Graph(id = 'byCountry'),
-            dcc.Graph(id = 'bySatelite'),
-        ],className = 'blocoTexto')],id = 'dashboard'),
+            dcc.Graph(id = 'bargraph'),
+        ],className = 'blocoDash')],id = 'dashboard'),
     dcc.Checklist(id = 'modo_escuro',options = ['Modo Escuro'],style = {'position': 'fixed', 'top':'93%','left':'1%','color':'rgb(100,100,100)',
                                            'background-color':'white','padding':'5px','border-radius':'10px','font-family':'helvetica'})
 ])

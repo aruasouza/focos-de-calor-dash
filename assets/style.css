@@ -41,6 +41,7 @@ button.close {
     border:0px;
     width:25px;
     height: 25px;
+    z-index: 3;
 }
 button.close:hover {
     background-color: #505050;
@@ -60,5 +61,6 @@ div.blocoTexto {
 }
 div.blocoDash {
     margin: 20px;
+    z-index: 2;
     font-family:helvetica;
 }
