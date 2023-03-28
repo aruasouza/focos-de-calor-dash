@@ -33,14 +33,15 @@ def get_data():
         df.to_csv('dados_backup.csv',index = False,sep = ';',decimal = ',')
         time_df = pd.DataFrame({'time':[datetime.now()]})
         time_df.to_csv('time.csv',index = False)
-        # backup = False
+        backup = False
+        time = 0
         print('Success')
     except Exception:
         print('O request falhou')
         df = pd.read_csv('dados_backup.csv',sep = ';',decimal = ',')
-        # backup = True
-        # time = pd.read_csv('time.csv').loc[0,'time']
-    return df
+        backup = True
+        time = pd.read_csv('time.csv').loc[0,'time'].split('.')[0]
+    return df,backup,time
 
 def datetime_to_data(date):
     ano = str(date.year)
@@ -63,16 +64,22 @@ def inicial_figure():
     fig = px.density_mapbox(pd.DataFrame({'Município':[],'Latitude':[],'Longitude':[],'País':[],'Estado':[]}),
                             lat="Latitude", lon="Longitude",radius = 4, hover_name="Município",
                             hover_data=["País",'Estado'], zoom=3,color_continuous_scale = 'Hot')
-    fig.update_layout(mapbox_style='stamen-terrain',transition_duration=500,margin=dict(l=0,r=0,b=0,t=0))
+    fig.update_layout(mapbox_style='stamen-terrain',transition_duration=500,margin=dict(l=0,r=0,b=0,t=30),
+                      title={'text': 'Obtendo dados, aguarde...','xanchor': 'center','yanchor': 'top','y':0.99,'x':0.5})
     return fig
 
 @app.callback(Output('data', 'data'),Output('mapa','figure'), Input('modo_escuro', 'value'), State('data', 'data'),State('mapa','figure'))
 def update_data(value, data, fig):
     if not data or not callback_context.triggered:
-        data = get_data()
+        data,backup,time = get_data()
         fig = px.density_mapbox(data, lat="Latitude", lon="Longitude",radius = 4, hover_name="Município",
         hover_data=["País",'Estado','Data','Hora'], zoom=3,color_continuous_scale = 'Hot')
-        fig.update_layout(mapbox_style = 'stamen-terrain',transition_duration=500,margin=dict(l=0,r=0,b=0,t=0))
+        if not backup:
+            fig.update_layout(mapbox_style = 'stamen-terrain',transition_duration=500,margin=dict(l=0,r=0,b=0,t=0))
+        else:
+            fig.update_layout(mapbox_style = 'stamen-terrain',transition_duration=500,margin=dict(l=0,r=0,b=0,t=25),
+                              title={'text': f'A conexão com BDQueimadas falhou. Usando dados obtidos em {time}',
+                                     'xanchor': 'center','yanchor': 'top','y':0.99,'x':0.5},font = {'size':10,'color':'red'})
         fig.update(layout_coloraxis_showscale=False)
         data = data.to_json(orient='split')
         return data,fig
@@ -131,7 +138,7 @@ def build_graphs(data):
     df['new_datetime'] = df.apply(lambda x: datetime(x['ano'],x['mes'],x['dia'],x['hora_do_dia']),axis = 1)
     group3 = df[['new_datetime','Focos']].groupby('new_datetime').count()
     fig.add_trace(go.Scatter(x = group3.index,y = group3['Focos']),row = 2,col = 1)
-    fig.update_layout(showlegend=False,margin=dict(l=0, r=0, t=30, b=0),height = 610)
+    fig.update_layout(showlegend=False,margin=dict(l=0, r=0, t=30, b=0),height = 610,template = 'seaborn')
     fig.update_yaxes(showticklabels=False)
     return fig
 
@@ -173,4 +180,4 @@ app.layout = html.Div([
 ])
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
