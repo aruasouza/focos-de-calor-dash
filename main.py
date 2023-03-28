@@ -12,6 +12,7 @@ from dash import callback_context
 import urllib
 
 app = Dash(__name__)
+app.title = 'Focos de calor'
 server = app.server
 
 font_color = 'rgb(100,100,100)'
@@ -180,4 +181,4 @@ app.layout = html.Div([
 ])
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
